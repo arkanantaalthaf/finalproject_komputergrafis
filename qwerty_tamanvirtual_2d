@@ -1,0 +1,134 @@
+#include <GLFW/glfw3.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+
+// lingkaran
+void drawCircle(float cx, float cy, float r, int num_segments) {
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(cx, cy); // titik pusat
+    for (int i = 0; i <= num_segments; i++) {
+        float theta = 2.0f * 3.1415926f * i / num_segments;
+        float x = r * cosf(theta);
+        float y = r * sinf(theta);
+        glVertex2f(x + cx, y + cy);
+    }
+    glEnd();
+}
+
+// kolam elips
+void drawEllipse(float cx, float cy, float rx, float ry, int num_segments) {
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(cx, cy); // Titik pusat
+    for (int i = 0; i <= num_segments; i++) {
+        float theta = 2.0f * 3.1415926f * i / num_segments;
+        float x = rx * cosf(theta);
+        float y = ry * sinf(theta);
+        glVertex2f(x + cx, y + cy);
+    }
+    glEnd();
+}
+
+// rerumputan hijau
+void drawRectangle(float x, float y, float width, float height) {
+    glBegin(GL_QUADS);
+    glVertex2f(x, y); // Kiri bawah
+    glVertex2f(x + width, y); // Kanan bawah
+    glVertex2f(x + width, y + height); // Kanan atas
+    glVertex2f(x, y + height); // Kiri atas
+    glEnd();
+}
+
+// pohon
+void drawTree(float x, float y) {
+    // batang pohon
+    glColor3f(0.5f, 0.3f, 0.0f); // warna batang
+    drawRectangle(x - 0.05f, y, 0.1f, 0.5f); // batang pohon yang lebih panjang
+
+    // daun pohon
+    glColor3f(0.0f, 0.5f, 0.0f); // warna daun
+    drawCircle(x, y + 0.5f, 0.3f, 30); // daun pohon di atas batang
+}
+
+// kursi taman
+void drawBench(float x, float y) {
+    glColor3f(0.6f, 0.3f, 0.0f); // warna kursi (coklat kayu)
+    drawRectangle(x - 0.25f, y, 0.5f, 0.1f); // dudukan kursi
+
+    // kaki kursi
+    glColor3f(0.4f, 0.2f, 0.0f); // warna kaki kursi (lebih gelap)
+    drawRectangle(x - 0.2f, y - 0.1f, 0.05f, 0.1f); // Kaki kiri depan
+    drawRectangle(x + 0.15f, y - 0.1f, 0.05f, 0.1f); // Kaki kanan depan
+    drawRectangle(x - 0.2f, y - 0.2f, 0.05f, 0.1f); // Kaki kiri belakang
+    drawRectangle(x + 0.15f, y - 0.2f, 0.05f, 0.1f); // Kaki kanan belakang
+}
+
+// rerumputan hijau
+void drawGreenGround() {
+    glColor3f(0.0f, 1.0f, 0.0f); // warna
+    drawRectangle(-1.0f, -1.0f, 2.0f, 1.0f); // bentangan rerumputan dari -1.0f hingga 1.0f, hingga ke bawah
+}
+
+// langit
+void drawSky() {
+    glColor3f(0.5f, 0.8f, 1.0f); // warna langit (biru muda)
+    drawRectangle(-1.0f, 0.0f, 2.0f, 1.0f); // bentangan langit dari -1.0f hingga 1.0f dan berada di atas tanah
+}
+
+// matahari
+void drawSun(float x, float y, float radius) {
+    glColor3f(1.0f, 1.0f, 0.0f); // warna matahari (kuning terang)
+    drawCircle(x, y, radius, 30); // bentuk matahari (lingkaran)
+}
+
+// inisialisasi dan menampilkan dua pohon, dua kursi taman, kolam, tanah hijau, dan matahari
+int main(void) {
+    if (!glfwInit()) {
+        fprintf(stderr, "Gagal menginisialisasi GLFW\n");
+        return -1;
+    }
+
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Virtual Garden - Kelompok 8 qwerty", NULL, NULL);
+    if (!window) {
+        glfwTerminate();
+        fprintf(stderr, "Gagal membuat jendela GLFW\n");
+        return -1;
+    }
+
+    glfwMakeContextCurrent(window);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Warna latar belakang putih
+
+    while (!glfwWindowShouldClose(window)) {
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // langit
+        drawSky();
+
+        // matahari
+        drawSun(0.8f, 0.8f, 0.1f); // matahari di kanan atas dengan radius 0.1f
+
+        // rerumputan
+        drawGreenGround(); // membentang hingga ke bawah layar
+
+        // dua pohon
+        drawTree(-0.7f, -0.2f); // pohon pertama
+        drawTree(0.7f, -0.2f);  // pohon kedua (lebih jauh dari pohon pertama)
+
+        // kursi taman dekat pohon pertama
+        drawBench(-0.7f, -0.4f);
+
+        // kursi taman dekat pohon kedua
+        drawBench(0.7f, -0.4f);
+
+        // kolam elips
+        glColor3f(0.0f, 0.0f, 1.0f); // warna kolam (biru)
+        drawEllipse(0.0f, -0.3f, 0.4f, 0.2f, 30);
+
+        glfwSwapBuffers(window); // tukar buffer
+        glfwPollEvents(); // proses event
+    }
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return 0;
+}
