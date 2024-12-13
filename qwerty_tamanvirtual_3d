@@ -1,0 +1,201 @@
+#include <GLFW/glfw3.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+
+#define WIDTH 800
+#define HEIGHT 600
+#define M_PI 3.14159265358979323846  // Menambahkan definisi M_PI
+
+void initOpenGL();
+void drawTree(float x, float y, float z);
+void drawBench(float x, float y, float z);
+void drawPond(float x, float y, float z);
+void drawBush(float x, float y, float z);
+void drawCylinder(float x, float y, float z, float radius, float height);
+void drawSphere(float x, float y, float z, float radius);
+void drawCube(float x, float y, float z, float size);
+void display(GLFWwindow* window);
+void drawCircle(float x, float y, float z, float radius, int slices);
+
+int main() {
+    if (!glfwInit()) {
+        printf("Failed to initialize GLFW\n");
+        return -1;
+    }
+
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Virtual Garden", NULL, NULL);
+    if (!window) {
+        glfwTerminate();
+        printf("Failed to create GLFW window\n");
+        return -1;
+    }
+
+    glfwMakeContextCurrent(window);
+    initOpenGL();
+
+    while (!glfwWindowShouldClose(window)) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        display(window);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glfwTerminate();
+    return 0;
+}
+
+void initOpenGL() {
+    glEnable(GL_DEPTH_TEST);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-10, 10, -10, 10, -10, 10);
+    glTranslatef(0.0, 0.0, -10.0);
+}
+
+void display(GLFWwindow* window) {
+    // Drawing trees
+    drawTree(-3.0, 0.0, 0.0);
+    drawTree(3.0, 0.0, 0.0);
+
+    // Drawing bench
+    drawBench(0.0, -1.0, 0.0);
+
+    // Drawing pond
+    drawPond(0.0, -2.0, 3.0);
+
+    // Drawing bushes
+    drawBush(-5.0, 0.0, -3.0);
+    drawBush(5.0, 0.0, -3.0);
+}
+
+void drawTree(float x, float y, float z) {
+    // Draw trunk (cylinder)
+    drawCylinder(x, y, z, 0.3, 2.0);
+
+    // Draw leaves (sphere)
+    drawSphere(x, y + 2.0, z, 1.0);
+}
+
+void drawBench(float x, float y, float z) {
+    // Draw bench seat (cube)
+    glPushMatrix();
+    glTranslatef(x, y, z);
+    glScalef(2.0, 0.5, 1.0);
+    drawCube(0.0, 0.0, 0.0, 1.0);
+    glPopMatrix();
+
+    // Draw bench legs (cylinders)
+    drawCylinder(x - 0.7, y - 0.5, z - 0.5, 0.1, 0.5);
+    drawCylinder(x + 0.7, y - 0.5, z - 0.5, 0.1, 0.5);
+    drawCylinder(x - 0.7, y - 0.5, z + 0.5, 0.1, 0.5);
+    drawCylinder(x + 0.7, y - 0.5, z + 0.5, 0.1, 0.5);
+}
+
+void drawPond(float x, float y, float z) {
+    // Draw pond as a large cylinder
+    drawCylinder(x, y, z, 3.0, 0.1);
+}
+
+void drawBush(float x, float y, float z) {
+    // Draw bush as a small sphere
+    drawSphere(x, y, z, 1.0);
+}
+
+void drawCylinder(float x, float y, float z, float radius, float height) {
+    int slices = 36;
+    int stacks = 1;
+    float angleStep = 2.0f * M_PI / slices;
+
+    glPushMatrix();
+    glTranslatef(x, y, z);
+
+    glBegin(GL_QUAD_STRIP);
+    for (int i = 0; i <= slices; ++i) {
+        float angle = i * angleStep;
+        float xPos = radius * cos(angle);
+        float yPos = radius * sin(angle);
+        
+        glVertex3f(xPos, yPos, 0.0f);  // Bottom circle
+        glVertex3f(xPos, yPos, height);  // Top circle
+    }
+    glEnd();
+
+    glPopMatrix();
+}
+
+void drawSphere(float x, float y, float z, float radius) {
+    int slices = 36;
+    int stacks = 18;
+
+    glPushMatrix();
+    glTranslatef(x, y, z);
+
+    for (int i = 0; i < stacks; ++i) {
+        float lat0 = M_PI * (-0.5 + (float) (i) / stacks);
+        float lat1 = M_PI * (-0.5 + (float) (i + 1) / stacks);
+        float z0 = radius * sin(lat0);
+        float z1 = radius * sin(lat1);
+        float r0 = radius * cos(lat0);
+        float r1 = radius * cos(lat1);
+
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= slices; ++j) {
+            float lng = 2 * M_PI * (float) (j) / slices;
+            float x0 = r0 * cos(lng);
+            float y0 = r0 * sin(lng);
+            float x1 = r1 * cos(lng);
+            float y1 = r1 * sin(lng);
+
+            glVertex3f(x + x0, y + y0, z + z0);
+            glVertex3f(x + x1, y + y1, z + z1);
+        }
+        glEnd();
+    }
+
+    glPopMatrix();
+}
+
+void drawCube(float x, float y, float z, float size) {
+    float halfSize = size / 2.0;
+    glBegin(GL_QUADS);
+
+    // Front face
+    glVertex3f(x - halfSize, y - halfSize, z + halfSize);
+    glVertex3f(x + halfSize, y - halfSize, z + halfSize);
+    glVertex3f(x + halfSize, y + halfSize, z + halfSize);
+    glVertex3f(x - halfSize, y + halfSize, z + halfSize);
+
+    // Back face
+    glVertex3f(x - halfSize, y - halfSize, z - halfSize);
+    glVertex3f(x - halfSize, y + halfSize, z - halfSize);
+    glVertex3f(x + halfSize, y + halfSize, z - halfSize);
+    glVertex3f(x + halfSize, y - halfSize, z - halfSize);
+
+    // Left face
+    glVertex3f(x - halfSize, y - halfSize, z - halfSize);
+    glVertex3f(x - halfSize, y - halfSize, z + halfSize);
+    glVertex3f(x - halfSize, y + halfSize, z + halfSize);
+    glVertex3f(x - halfSize, y + halfSize, z - halfSize);
+
+    // Right face
+    glVertex3f(x + halfSize, y - halfSize, z - halfSize);
+    glVertex3f(x + halfSize, y + halfSize, z - halfSize);
+    glVertex3f(x + halfSize, y + halfSize, z + halfSize);
+    glVertex3f(x + halfSize, y - halfSize, z + halfSize);
+
+    // Top face
+    glVertex3f(x - halfSize, y + halfSize, z - halfSize);
+    glVertex3f(x + halfSize, y + halfSize, z - halfSize);
+    glVertex3f(x + halfSize, y + halfSize, z + halfSize);
+    glVertex3f(x - halfSize, y + halfSize, z + halfSize);
+
+    // Bottom face
+    glVertex3f(x - halfSize, y - halfSize, z - halfSize);
+    glVertex3f(x - halfSize, y - halfSize, z + halfSize);
+    glVertex3f(x + halfSize, y - halfSize, z + halfSize);
+    glVertex3f(x + halfSize, y - halfSize, z - halfSize);
+
+    glEnd();
+}
